@@ -19,7 +19,8 @@ private:
 	void InitItems();
 	//vector<CProduction> lrItems;
 	vector<CProduction> productionVec;
-	map<string, CProduction> productionNameMap;
+	map<string, vector<CProduction>> productionNameMap;
+	vector<string> firstSet;
 };
 
 #endif

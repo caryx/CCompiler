@@ -16,13 +16,17 @@ public:
 	void FromString(const string& str);
 	void BuildLRItems();
 
-	void FromCProduction(const CProduction& production, int index);
+	void FromCProduction(const CProduction& production, int index);	
+	string nextElement();
+	string prevElement();
 	string toString();
 
 	int index;
 	string name;
 	vector<string> tokens;
 	vector<CProduction> lrItems;
+	vector<CProduction> lr_after;
+	vector<CProduction> lr_before;
 };
 
 
