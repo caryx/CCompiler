@@ -7,6 +7,10 @@
 .metadata
 bin/
 tmp/
+*.filters
+*.sdf
+*.user
+*.opensdf
 *.tmp
 *.bak
 *.swp
