@@ -25,6 +25,8 @@ public:
     vector<string> getFirstSet(const string token);
     vector<string> getFirstSet(vector<string> token);
 
+    int getProductionIndex(CProduction prod);
+
 private:
     vector<string> getFirstSet(vector<string> token, int startIndex);
 

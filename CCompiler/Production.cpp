@@ -99,6 +99,29 @@ void CProduction::FromCProduction(const CProduction& production, int ind)
 	}	
 }
 
+/// only consider the production. ignore index and availableComingToken
+bool CProduction::hasSameCore(const CProduction& prod)
+{
+    bool result1 = (this->name == prod.name);
+    if (result1)
+    {
+        bool result2 = this->tokens.size() == prod.tokens.size();
+        if (result2)
+        {
+            for(int i=0;i<this->tokens.size();++i)
+            {
+                if (this->tokens[i] != prod.tokens[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
 
 bool CProduction::operator==(const CProduction& prod)
 {

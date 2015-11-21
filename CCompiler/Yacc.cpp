@@ -12,6 +12,19 @@ CYacc::~CYacc(void)
 {
 }
 
+int CYacc::getProductionIndex(CProduction prod)
+{
+    for(int i=0;i<productionVec.size();++i)
+    {
+        if (productionVec[i].hasSameCore(prod))
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 
 vector<CProduction> CYacc::GetAfterItems(CProduction& lastLri)
 {
@@ -227,6 +240,13 @@ void CYacc::getFullState(YaccState& state)
             vector<string> tmpFirstSet =  getFirstSet(tmpTokenSet);
             bool hasEmptyItem = false;
 
+            /// act means available coming tokens
+            /// [A¡ú¦Á¡¤B¦Â,a]
+            /// B¡ú¦Ã, 
+            /// aCT = FIRST(¦Âa)
+            /// ¦Â==¦Å, aCT = a
+            /// ¦Â!=¦Å, act = FIRST(¦Â)
+            /// todo: If FIRST(¦Â) = {a,b,¦Å}, there could be problem here.
             vector<string> aCT;
             for(int i=0;i<tmpFirstSet.size();++i)
             {
@@ -326,7 +346,7 @@ void CYacc::InitGotoTable()
         StateMove stateMove = stateList.front();
         stateList.pop_front();
 
-        getFullState(stateMove.state);
+        getFullState(stateMove.state);      //get CLOSURE(I) and add it to a list for looping
         int stateIndex = gotoAction.getStateIndex(stateMove.state);
         
         if(stateIndex == -1)
@@ -337,11 +357,30 @@ void CYacc::InitGotoTable()
             int currentStateIndex = gotoAction.addState(stateMove.state);
             for(int i=0;i<stateMove.state.productionVec.size();++i)
             {
+                /// for each item in CLOSURE(I)
+                /// A¡úBC¡¤, set reduce by A¡úBC in goto table
+
                 if(stateMove.state.productionVec[i].isLastItem())
                 {
+                    /// has an Item which need reduce.
+                    int index = getProductionIndex(stateMove.state.productionVec[i]);
+                    if (index < 0)
+                    {
+                        printf("Error: invalid production\n");
+                    }
+
+                    for(int k=0;k<stateMove.state.productionVec[i].comingTokens.size();++k)
+                    {
+                        gotoAction.setGotoState(currentStateIndex, stateMove.state.productionVec[i].comingTokens[k], -(1+index));
+                    }
+                    
                     continue;
                 }
 
+                /// for each item in CLOSURE(I)
+                /// A¡úB¡¤CE, add A¡úBC¡¤E to I` and we will get CLOSURE(I`) later.
+                /// also consider A¡ú¡¤CF, add A¡úC¡¤F to I` and we will get CLOSURE(I`) later.
+                /// Added A¡úC¡¤F and A¡úBC¡¤E because they share C to switch state.
                 string nextToken = stateMove.state.productionVec[i].nextToken();
                  
                 if (tokenTaken[nextToken])
@@ -369,6 +408,7 @@ void CYacc::InitGotoTable()
             if (stateMove.prevState != -1)
             {
                 gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, currentStateIndex);
+
             }
         }
         else

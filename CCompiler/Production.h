@@ -27,6 +27,7 @@ public:
     string prevToken();
     string nextToken();
 
+    bool hasSameCore(const CProduction& prod);
     bool operator==(const CProduction& prod);
     bool operator!=(const CProduction& prod);
 
