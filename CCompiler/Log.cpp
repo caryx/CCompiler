@@ -8,7 +8,6 @@ CLog::CLog(void)
 	filterLevel = 3;
 }
 
-
 CLog::~CLog(void)
 {
 }

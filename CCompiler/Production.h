@@ -14,19 +14,29 @@ public:
 	CProduction(void);
 	~CProduction(void);
 	void FromString(const string& str);
-	void BuildLRItems();
+	vector<CProduction> BuildLRItems();
 
 	void FromCProduction(const CProduction& production, int index);	
 	string nextElement();
 	string prevElement();
 	string toString();
 
-	int index;
-	string name;
-	vector<string> tokens;
-	vector<CProduction> lrItems;
-	vector<CProduction> lr_after;
-	vector<CProduction> lr_before;
+    bool isLastItem();
+    bool isFirstItem();
+    CProduction nextItem();
+    string prevToken();
+    string nextToken();
+
+    bool operator==(const CProduction& prod);
+    bool operator!=(const CProduction& prod);
+
+    string getTokenAfterNext();
+
+public:
+    int index;
+    string name;
+    vector<string> tokens;
+    vector<string> comingTokens;
 };
 
 

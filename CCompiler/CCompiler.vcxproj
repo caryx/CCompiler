@@ -79,6 +79,7 @@
   <ItemGroup>
     <ClInclude Include="Basic_type.h" />
     <ClInclude Include="Compiler.h" />
+    <ClInclude Include="GotoAction.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="Lex.h" />
     <ClInclude Include="Linker.h" />
@@ -88,8 +89,10 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="Yacc.h" />
+    <ClInclude Include="YaccState.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GotoAction.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Compiler.cpp" />
@@ -100,6 +103,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Token.cpp" />
     <ClCompile Include="Yacc.cpp" />
+    <ClCompile Include="YaccState.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

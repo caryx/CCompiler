@@ -82,8 +82,9 @@ private:
 	{
 		char spliters[] = {' ', '\t'};
 		char* biOperators[] = {"+", "-", "*", "/", "=", "^", "%"};
-		char* keywords[] = {"for", "while", "do", "return", };
-		Str_VariableType_Map types[] = {
+		char* keywords[] = {"for", "while", "do", "return", "goto"};
+        Str_VariableType_Map types[] = {
+            {"void", VariableType::VOID}, 
 			{"char", VariableType::CHAR}, 
 			{"int", VariableType::INT}, 
 			{"long", VariableType::LONG},

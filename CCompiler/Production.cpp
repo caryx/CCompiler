@@ -3,7 +3,7 @@
 
 CProduction::CProduction(void)
 {
-	index = -1;
+	index = 0;
 }
 
 
@@ -28,22 +28,27 @@ void CProduction::FromString(const string& str)
 
 		if (name.size())
 		{
-			if (i == str.size() - 1 || str[i] == ' ')
+			if (i == str.size() - 1)
 			{
-				tokens.push_back(str.substr(start, i-start + 1));
-				start = i + 1;
+                tokens.push_back(str.substr(start, i-start + 1));
+                start = i + 1;
 			}
+            else if(str[i] == ' ')
+            {
+                tokens.push_back(str.substr(start, i-start));
+                start = i + 1;
+            }
 		}
 	}
 }
 
-/// next element.
+/// next expecting token .
 string CProduction::nextElement()
 {
 	string result;
 	if (index >= 0 && index < tokens.size())
 	{
-		result = tokens[(index+1)%tokens.size()];
+		result = tokens[index];
 	}
 
 	return result;
@@ -52,28 +57,27 @@ string CProduction::nextElement()
 /// previous element.
 string CProduction::prevElement()
 {
-	string result = tokens[(index+tokens.size()-1)%tokens.size()];
+    if (index == 0)
+    {
+        return "";
+    }
+
+	string result = tokens[index-1];
 	return result;
 }
 
-void CProduction::BuildLRItems()
+vector<CProduction> CProduction::BuildLRItems()
 {
-	for(int i=0;i<=tokens.size();++i)
-	{
-		//LRCItem lrCItem;
-		//lrCItem.index = i;
-		//lrCItem.tokens = tokens;
-		//lrCItem.name = name;
+    vector<CProduction> lrItems;
+	//for(int i=0;i<=tokens.size();++i)
+	//{
+	//	CProduction lrCItem;
+	//	lrCItem.FromCProduction(*this, i);
+	//	lrItems.push_back(lrCItem);
+	//	printf("%s\n", lrCItem.toString().c_str());
+	//}
 
-		//lrItems.push_back(lrCItem);
-		//
-		//printf("%s\n", lrCItem.toString().c_str());
-
-		CProduction lrCItem;
-		lrCItem.FromCProduction(*this, i);
-		lrItems.push_back(lrCItem);
-		printf("%s\n", lrCItem.toString().c_str());
-	}
+    return lrItems;
 }
 
 void CProduction::FromCProduction(const CProduction& production, int ind)
@@ -95,26 +99,127 @@ void CProduction::FromCProduction(const CProduction& production, int ind)
 	}	
 }
 
+
+bool CProduction::operator==(const CProduction& prod)
+{
+    bool result1 = (this->index == prod.index) && (this->name == prod.name);
+    if (result1)
+    {
+        bool result2 = this->tokens.size() == prod.tokens.size();
+        if (result2)
+        {
+            for(int i=0;i<this->tokens.size();++i)
+            {
+                if (this->tokens[i] != prod.tokens[i])
+                {
+                    return false;
+                }
+            }
+
+            for(int i=0;i<this->comingTokens.size();++i)
+            {
+                if (this->comingTokens[i] != prod.comingTokens[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CProduction::operator!=(const CProduction& prod)
+{
+    return !(*this == prod);
+}
+
+bool CProduction::isLastItem()
+{
+    return (this->tokens.size() == index);
+}
+
+
+bool CProduction::isFirstItem()
+{
+    return index == 0;
+}
+
+CProduction CProduction::nextItem()
+{
+    CProduction prod = *this;
+    if (!prod.isLastItem())
+    {
+        prod.index++;
+    }
+
+    return prod;
+}
+
+string CProduction::prevToken()
+{
+    if (index <= 0 || index >= tokens.size())
+    {
+        return "";
+    }
+
+    return tokens[index-1];
+}
+
+string CProduction::nextToken()
+{
+    if (index < 0 || index >= tokens.size())
+    {
+        return "";
+    }
+
+    return tokens[index];
+}
+
+string  CProduction::getTokenAfterNext()
+{
+    if (index < 0 || index + 1 >= tokens.size())
+    {
+        return "";
+    }
+
+    return tokens[index+1];
+}
+
 string CProduction::toString()
 {
-	string result = name + "->";
-	//for(int i=0;i<=tokens.size();++i)
-	//{
-	//	if (i == index)
-	//	{
-	//		result.push_back('.');
-	//	}
-	//	
-	//	if (i < tokens.size())
-	//	{
-	//		result += tokens[i];
-	//	}
-	//}
+    string result = name;
+    result += "->";
+    for(int i=0;i<tokens.size();++i)
+    {
+        if (i == index)
+        {
+            result += " .";
+        }
 
-	for(int i=0;i<tokens.size();++i)
-	{
-		result += tokens[i];
-	}
+        result += " ";
+        result += tokens[i];
+    }
 
-	return result;
+    if (tokens.size() == index)
+    {
+        result += " .";
+    }
+
+    if (comingTokens.size())
+    {
+        result += "\t~~~~\t";
+        for(int i=0;i<comingTokens.size();++i)
+        {
+            if (i)
+            {
+                result += "/";
+            }
+            result += comingTokens[i];
+        }
+    }
+    
+    return result;
 }

@@ -4,6 +4,7 @@
 
 enum VariableType
 {
+    VOID,
 	CHAR,
 	INT,
 	LONG,

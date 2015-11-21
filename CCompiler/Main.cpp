@@ -16,6 +16,13 @@ void TestSyntax()
 	printf("%d\n", sizeof(y));
 }
 
+int add(int x, int y)
+{
+    printf("-------------------------------------------------------\n");
+    return x+y;
+}
+int x = add(1,2);
+
 int main()
 {
 	//TestSyntax();

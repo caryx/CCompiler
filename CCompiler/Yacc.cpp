@@ -1,7 +1,7 @@
-#include <unordered_set>
+#include <list>
 #include "Yacc.h"
 #include "Production.h"
-
+using namespace std;
 CYacc::CYacc(void)
 {
 	Init();
@@ -12,45 +12,92 @@ CYacc::~CYacc(void)
 {
 }
 
+
+vector<CProduction> CYacc::GetAfterItems(CProduction& lastLri)
+{
+    vector<CProduction> result;
+    string nextElement = lastLri.nextElement();
+    map<string, vector<CProduction>>::iterator nextIter = productionNameMap.find(nextElement);
+    if (nextIter != productionNameMap.end())
+    {
+        result = nextIter->second;
+    }
+
+    return result;
+}
+
+vector<CProduction> CYacc::GetBeforeItems(CProduction& lastLri)
+{
+    vector<CProduction> result;
+    string nextElement = lastLri.prevElement();
+    map<string, vector<CProduction>>::iterator nextIter = productionNameMap.find(nextElement);
+    if (nextIter != productionNameMap.end())
+    {
+        result = nextIter->second;
+    }
+
+    return result;
+}
+
+void CYacc::InitItem(CProduction& lastLri)
+{
+
+}
+
 void CYacc::InitItems()
 {
 	for(int i=0;i<productionVec.size();++i)
 	{
-		vector<CProduction> lriVec;
-		CProduction& lastLri = productionVec[i];
-		for(int k=0;k<lastLri.lrItems.size();++k)
-		{
-			CProduction& lri = productionVec[i].lrItems[k];
-			map<string, vector<CProduction>>::iterator nextIter = productionNameMap.find(lri.nextElement());
-			if (nextIter != productionNameMap.end())
-			{
-				productionVec[i].lrItems[k].lr_after = nextIter->second;
-			}
-
-			map<string, vector<CProduction>>::iterator prevIter = productionNameMap.find(lri.prevElement());
-			if (prevIter != productionNameMap.end())
-			{
-				productionVec[i].lrItems[k].lr_before = prevIter->second;
-			}
-		}
+        InitItem(productionVec[i]);
 	}
 }
 
 void CYacc::InitProduction()
 {
-	static char * syntax[] = {
-		"S->CElement", 
-		"CElement->DefineVariable", 
-		"CElement->DefineMethod", 
-		"CElement->Statement", 
-		"DefineVariable->TYPEDEF VARIABLE ;", 
-		"DefineMethod->TYPEDEF VARIABLE ( ARG_LIST ) { METHOD_BODY }",
-		"ARG_LIST->EMPTY",
-		"ARG_LIST->DefineVariable ARG_LIST2",
-		"ARG_LIST2->EMPTY",
-		"ARG_LIST2->, DefineVariable ARG_LIST2",
-		
-	};
+    /// use 'e' as empty token.
+
+	//static char * syntax[] = {
+	//	"S->CElement", 
+	//	"CElement->DefineVariable", 
+	//	"CElement->DefineMethod", 
+	//	"DefineVariable->TYPE ID ;", 
+	//	"DefineMethod->TYPE ID ( ) { METHOD_BODY }",
+ //       "METHOD_BODY->Statement ;", 
+ //       "Statement->DefineVariable ;",
+ //       "Statement->MethodCall",
+ //       "Statement->Expression",
+ //       "MethodCall->ID ( ) ;", 
+ //   };
+
+    static char * syntax[] = {
+    	"G->S", 
+    	"S->C C", 
+    	"C->c C", 
+    	"C->d"
+       };
+
+    //static char * syntax[] = {
+    //    "G->E", 
+    //    "E->E + T", 
+    //    "E->T", 
+    //    "T->T * F", 
+    //    "T->F", 
+    //    "F->( E )", 
+    //    "F->id"
+    //};
+
+    //static char * syntax[] = {
+    //    "G->A", 
+    //    "A->B C D id E",
+    //    "B->main",
+    //    "B->e",
+    //    "C->exp",
+    //    "C->e",
+    //    "D->stat",
+    //    "D->e",
+    //    "E->for",
+    //    "E->e",
+    //};
 
 	for(int i=0;i<sizeof(syntax)/sizeof(syntax[0]);++i)
 	{
@@ -58,18 +105,20 @@ void CYacc::InitProduction()
 		production.FromString(syntax[i]);
 		production.BuildLRItems();
 
+        if (production.name == "G")
+        {
+            production.comingTokens.push_back("$");
+        }
+
 		productionVec.push_back(production);
 		productionNameMap[production.name].push_back(production);
 	}
 
-	std::unordered_set<string> nonTernimalSet;
-	vector<string> nonTernimal;
+
 	for(int i=0;i<productionVec.size();++i)
 	{
-		nonTernimal.push_back(productionVec[i].name);
 		nonTernimalSet.insert(productionVec[i].name);
 	}
-	
 
 	for(int i=0;i<productionVec.size();++i)
 	{
@@ -80,14 +129,365 @@ void CYacc::InitProduction()
 			{
 				firstSet.push_back(*iter);
 			}
+            else
+            {
+                ternimalSet.insert(productionVec[i].tokens[k]);
+            }
 		}
 	}
-
-
 }
+
+vector<string> CYacc::getFirstSet(string token)
+{
+    vector<string> tokenVec;
+    tokenVec.push_back(token);
+    return getFirstSet(tokenVec);
+}
+
+vector<string> CYacc::getFirstSet(vector<string> tokenVec)
+{
+    return getFirstSet(tokenVec, 0);
+}
+
+vector<string> CYacc::getFirstSet(vector<string> tokenVec, int startIndex)
+{
+    vector<string> resultVec;
+    if (startIndex >= tokenVec.size())
+    {
+        return resultVec;
+    }
+
+    if (tokenVec[startIndex] == "e" || tokenVec[startIndex] == "")
+    {
+        if (tokenVec.size() == startIndex + 1)
+        {
+            resultVec.push_back("e");
+            return resultVec;
+        }
+
+        return getFirstSet(tokenVec, startIndex + 1);
+    }
+    else if(ternimalSet.find(tokenVec[startIndex]) != ternimalSet.end())
+    {
+        /// first set of a nonTerminalSet is itself.
+        resultVec.push_back(tokenVec[startIndex]);
+        return resultVec;
+    }
+    else if (nonTernimalSet.find(tokenVec[startIndex]) != nonTernimalSet.end())
+    {
+        vector<string> firstSetOfIthToken;
+        map<string, bool> tokenExistMap;
+        bool hasEmpty = false;
+        for(int k=0;k<productionNameMap[tokenVec[startIndex]].size();++k)
+        {
+            vector<string> firstSetOfIthTokenTmp = getFirstSet(productionNameMap[tokenVec[startIndex]][k].tokens, 0);
+            for(int j=0;j<firstSetOfIthTokenTmp.size();++j)
+            {
+                if(firstSetOfIthTokenTmp[j] == "e")
+                {
+                    hasEmpty = true;
+                }
+                tokenExistMap[firstSetOfIthTokenTmp[j]] = true;
+            }
+        }
+
+        if (hasEmpty)
+        {
+            vector<string> firstSetOfIthTokenTmp2 = getFirstSet(tokenVec, 1+startIndex);
+            for(int j=0;j<firstSetOfIthTokenTmp2.size();++j)
+            {
+                tokenExistMap[firstSetOfIthTokenTmp2[j]] = true;
+            }
+        }
+
+        for(map<string, bool>::iterator iter = tokenExistMap.begin(); iter!= tokenExistMap.end();++iter)
+        {
+            resultVec.push_back(iter->first);
+        }
+
+        return resultVec;
+    }
+    
+    return resultVec;
+}
+
+void CYacc::getFullState(YaccState& state)
+{
+    bool itemAdded = false;
+    while(1)
+    {
+        //YaccState& state = gotoAction.stateVec[i];
+        // for each production in the state
+        vector<CProduction> tmpProduction = state.productionVec;
+        for(int k=0;k<tmpProduction.size();++k)
+        {
+            vector<CProduction> nextProd= GetAfterItems(tmpProduction[k]);
+            vector<string> tmpTokenSet;
+            tmpTokenSet.push_back(tmpProduction[k].getTokenAfterNext());
+            vector<string> tmpFirstSet =  getFirstSet(tmpTokenSet);
+            bool hasEmptyItem = false;
+
+            vector<string> aCT;
+            for(int i=0;i<tmpFirstSet.size();++i)
+            {
+                if (tmpFirstSet[i] == "e" || tmpFirstSet[i] == "" )
+                {
+                    hasEmptyItem = true;
+                }
+                else
+                {
+                    aCT.push_back(tmpFirstSet[i]);
+                }
+            }
+
+            if (hasEmptyItem)
+            {
+                for(int j=0;j<tmpProduction[k].comingTokens.size();++j)
+                {
+                    aCT.push_back(tmpProduction[k].comingTokens[j]);
+                }
+            }
+
+            vector<string> availableComingToken;
+            //For A->.BC, add B->.EF to the current state
+            //For A->B.C, add C->.MN to the current state
+            for(int j=0;j<nextProd.size();++j)
+            {
+                nextProd[j].comingTokens = aCT;
+                if (!state.hasItem(nextProd[j]))
+                {
+                    state.addItem(nextProd[j]);
+                    itemAdded = true;
+                }
+            }
+        }
+
+        if (!itemAdded)
+        {
+            break;
+            /// All items are updated in this state. Update the states to next
+        }
+
+        itemAdded = false;
+    }
+}
+
+void CYacc::InitGotoTable()
+{
+    vector<string> tokenVec;
+    tokenVec.push_back("e");
+    tokenVec.push_back("G");
+    vector<string> firstSet = getFirstSet(tokenVec);
+    for(int i=0;i<firstSet.size();++i)
+    {
+
+        printf("%s ", firstSet[i].c_str());
+    }
+
+    printf("\n-----------------------------------------------\n");
+
+    if (productionVec.size() <= 0)
+    {
+        return ;
+    }
+
+    class StateMove 
+    {
+    public :
+        int prevState;
+        string moveStr;
+        YaccState state;
+
+        StateMove(YaccState& yaccState)
+        {
+            prevState = -1;
+            moveStr = "";
+            state = yaccState;
+        }
+
+        StateMove(int prevS, const string& str, YaccState& yaccState)
+        {
+            prevState = prevS;
+            moveStr = str;
+            state = yaccState;
+        }
+    };
+
+    gotoAction.clear();
+
+    YaccState state;
+    state.addItem(productionVec[0]);
+    list<StateMove> stateList;
+    StateMove stateMove(state);
+    stateList.push_front(stateMove);
+
+    while(stateList.size())
+    {
+        StateMove stateMove = stateList.front();
+        stateList.pop_front();
+
+        getFullState(stateMove.state);
+        int stateIndex = gotoAction.getStateIndex(stateMove.state);
+        
+        if(stateIndex == -1)
+        {
+            map<string, bool> tokenTaken;
+
+            // for each state
+            int currentStateIndex = gotoAction.addState(stateMove.state);
+            for(int i=0;i<stateMove.state.productionVec.size();++i)
+            {
+                if(stateMove.state.productionVec[i].isLastItem())
+                {
+                    continue;
+                }
+
+                string nextToken = stateMove.state.productionVec[i].nextToken();
+                 
+                if (tokenTaken[nextToken])
+                {
+                    continue;
+                }
+
+                YaccState state;
+                state.addItem(stateMove.state.productionVec[i].nextItem());
+
+                for(int k=i+1;k<stateMove.state.productionVec.size();++k)
+                {
+                    if (stateMove.state.productionVec[k].nextToken() == nextToken)
+                    {
+                        CProduction prod = stateMove.state.productionVec[k].nextItem();
+                        state.addItem(prod);
+                    }                    
+                }
+
+                StateMove tmpStateMove(currentStateIndex, nextToken, state);
+                stateList.push_back(tmpStateMove);
+                tokenTaken[nextToken] = true;
+            }
+
+            if (stateMove.prevState != -1)
+            {
+                gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, currentStateIndex);
+            }
+        }
+        else
+        {
+            gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, stateIndex);
+        }
+    }
+
+    gotoAction.dump();
+}
+
+//////////////////////////////////////////////////////////////////////////
+///Initialize the goto table of LR(0) ?
+//void CYacc::InitGotoTable()
+//{
+//    if (productionVec.size() <= 0)
+//    {
+//        return ;
+//    }
+//
+//    class StateMove 
+//    {
+//    public :
+//        int prevState;
+//        string moveStr;
+//        YaccState state;
+//
+//        StateMove(YaccState& yaccState)
+//        {
+//            prevState = -1;
+//            moveStr = "";
+//            state = yaccState;
+//        }
+//
+//        StateMove(int prevS, const string& str, YaccState& yaccState)
+//        {
+//            prevState = prevS;
+//            moveStr = str;
+//            state = yaccState;
+//        }
+//    };
+//
+//    gotoAction.clear();
+//
+//    YaccState state;
+//    state.addItem(productionVec[0]);
+//    list<StateMove> stateList;
+//    StateMove stateMove(state);
+//    stateList.push_front(stateMove);
+//
+//    while(stateList.size())
+//    {
+//        StateMove stateMove = stateList.front();
+//        stateList.pop_front();
+//
+//        getFullState(stateMove.state);
+//        int stateIndex = gotoAction.getStateIndex(stateMove.state);
+//
+//        if(stateIndex == -1)
+//        {
+//            map<string, bool> tokenTaken;
+//
+//            // for each state
+//            int currentStateIndex = gotoAction.addState(stateMove.state);
+//            for(int i=0;i<stateMove.state.productionVec.size();++i)
+//            {
+//                if(stateMove.state.productionVec[i].isLastItem())
+//                {
+//                    continue;
+//                }
+//
+//                string nextToken = stateMove.state.productionVec[i].nextToken();
+//
+//                if (tokenTaken[nextToken])
+//                {
+//                    continue;
+//                }
+//
+//                YaccState state;
+//                state.addItem(stateMove.state.productionVec[i].nextItem());
+//
+//                for(int k=i+1;k<stateMove.state.productionVec.size();++k)
+//                {
+//                    if (stateMove.state.productionVec[k].nextToken() == nextToken)
+//                    {
+//                        CProduction prod = stateMove.state.productionVec[k].nextItem();
+//                        state.addItem(prod);
+//                    }                    
+//                }
+//
+//                StateMove tmpStateMove(currentStateIndex, nextToken, state);
+//                stateList.push_back(tmpStateMove);
+//                tokenTaken[nextToken] = true;
+//            }
+//
+//            if (stateMove.prevState != -1)
+//            {
+//                gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, currentStateIndex);
+//            }
+//        }
+//        else
+//        {
+//            gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, stateIndex);
+//        }
+//    }
+//
+//    gotoAction.dump();
+//}
 
 void CYacc::Init()
 {
 	InitProduction();
 	InitItems();
+
+    InitGotoTable();
+}
+
+void CYacc::processToken(CLex lex)
+{
+
+
 }
