@@ -29,7 +29,8 @@ public:
 
 private:
     vector<string> getFirstSet(vector<string> token, int startIndex);
-
+    bool isTerminal(string token);
+    bool isNonTerminal(string token);
 private:
     void Init();
     void InitProduction();                  ///init after LR item for all production

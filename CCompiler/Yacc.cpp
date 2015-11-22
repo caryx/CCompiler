@@ -1,4 +1,5 @@
 #include <list>
+#include <stack>
 #include "Yacc.h"
 #include "Production.h"
 using namespace std;
@@ -148,6 +149,16 @@ void CYacc::InitProduction()
             }
 		}
 	}
+}
+
+bool CYacc::isTerminal(string token)
+{
+    return (token == "$") || (ternimalSet.find(token) != ternimalSet.end());
+}
+
+bool CYacc::isNonTerminal(string token)
+{
+    return (nonTernimalSet.find(token) != nonTernimalSet.end());
 }
 
 vector<string> CYacc::getFirstSet(string token)
@@ -418,6 +429,97 @@ void CYacc::InitGotoTable()
     }
 
     gotoAction.dump();
+
+
+}
+
+void CYacc::processToken(CLex lex)
+{
+    //////////////////////////////////////////////////////////////////////////
+    // Test here.
+    vector<string> testTokenVec;
+    testTokenVec.push_back("c");
+    testTokenVec.push_back("d");
+    testTokenVec.push_back("d");
+    testTokenVec.push_back("$");
+    int tokenIndex = 0;
+    stack<int> stateStack;
+    stateStack.push(0);
+    stack<string> tokenStack;
+    while(1)
+    {
+        if (testTokenVec.size() == tokenIndex)
+        {
+            printf("Invalid token sequence\n");
+            break;
+        }
+
+        string currentToken = testTokenVec[tokenIndex];
+        int action = gotoAction.getGotoState(stateStack.top(), currentToken);
+        if (isTerminal(currentToken))
+        {
+            if (action > 0)
+            {
+                /// move in a token
+                stateStack.push(action);
+                tokenStack.push(currentToken);
+                ++tokenIndex;  // take a token
+            }
+            else
+            {
+                action = -action;
+                action -= 1;
+
+                if (action == 0)
+                {
+                    /// accept if all tokens were processed.
+                    if ((testTokenVec.size() == tokenIndex + 1) && testTokenVec[tokenIndex] == "$")
+                    {
+                        printf("Accept\n");
+                        return ;
+                    }
+                    else
+                    {
+                        printf("Error\n");
+                    }
+                }
+                else
+                {
+                    /// reduce with action-th production.
+                    int prodTokenCount = productionVec[action].tokens.size();
+                    if (tokenStack.size() >= prodTokenCount)
+                    {
+                        for(int i=0;i<prodTokenCount;++i)
+                        {
+                            if (tokenStack.top() == productionVec[action].tokens[prodTokenCount - 1 - i])
+                            {
+                                tokenStack.pop();
+                                stateStack.pop();
+                            }
+                            else
+                            {
+                                printf("Error when reducing. Invalid tokens to reduce.");
+                            }
+                        }
+
+                        tokenStack.push(productionVec[action].name);
+                        int reduceAction = gotoAction.getGotoState(stateStack.top(), productionVec[action].name);
+                        printf("%s\n", productionVec[action].toString().c_str());
+                        stateStack.push(reduceAction);
+                    }
+                    else
+                    {
+                        printf("Error when reducing. Not enough token to reduced\n");
+                    }
+                }
+            }
+        }
+        else
+        {
+            stateStack.pop();
+            stateStack.push(action);
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -524,10 +626,4 @@ void CYacc::Init()
 	InitItems();
 
     InitGotoTable();
-}
-
-void CYacc::processToken(CLex lex)
-{
-
-
 }
