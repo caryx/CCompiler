@@ -66,91 +66,6 @@ void CYacc::InitItems()
 	}
 }
 
-void CYacc::InitProduction()
-{
-    /// use 'e' as empty token.
-
-	//static char * syntax[] = {
-	//	"S->CElement", 
-	//	"CElement->DefineVariable", 
-	//	"CElement->DefineMethod", 
-	//	"DefineVariable->TYPE ID ;", 
-	//	"DefineMethod->TYPE ID ( ) { METHOD_BODY }",
- //       "METHOD_BODY->Statement ;", 
- //       "Statement->DefineVariable ;",
- //       "Statement->MethodCall",
- //       "Statement->Expression",
- //       "MethodCall->ID ( ) ;", 
- //   };
-
-    static char * syntax[] = {
-    	"G->S", 
-    	"S->C C", 
-    	"C->c C", 
-    	"C->d"
-       };
-
-    //static char * syntax[] = {
-    //    "G->E", 
-    //    "E->E + T", 
-    //    "E->T", 
-    //    "T->T * F", 
-    //    "T->F", 
-    //    "F->( E )", 
-    //    "F->id"
-    //};
-
-    //static char * syntax[] = {
-    //    "G->A", 
-    //    "A->B C D id E",
-    //    "B->main",
-    //    "B->e",
-    //    "C->exp",
-    //    "C->e",
-    //    "D->stat",
-    //    "D->e",
-    //    "E->for",
-    //    "E->e",
-    //};
-
-	for(int i=0;i<sizeof(syntax)/sizeof(syntax[0]);++i)
-	{
-		CProduction production;
-		production.FromString(syntax[i]);
-		production.BuildLRItems();
-
-        if (production.name == "G")
-        {
-            production.comingTokens.push_back("$");
-        }
-
-		productionVec.push_back(production);
-		productionNameMap[production.name].push_back(production);
-	}
-
-
-	for(int i=0;i<productionVec.size();++i)
-	{
-		nonTernimalSet.insert(productionVec[i].name);
-	}
-
-	for(int i=0;i<productionVec.size();++i)
-	{
-		for(int k=0;k<productionVec[i].tokens.size();++k)
-		{
-			std::unordered_set<string>::iterator iter = nonTernimalSet.find(productionVec[i].tokens[k]);
-			if (iter!= nonTernimalSet.end())
-			{
-				firstSet.push_back(*iter);
-			}
-            else
-            {
-                ternimalSet.insert(productionVec[i].tokens[k]);
-            }
-		}
-	}
-}
-
 bool CYacc::isTerminal(string token)
 {
     return (token == "$") || (ternimalSet.find(token) != ternimalSet.end());
@@ -454,6 +369,7 @@ void CYacc::processToken(CLex lex)
             break;
         }
 
+        /// todo: need to check if the coming token is in the comingTokenList of current production.
         string currentToken = testTokenVec[tokenIndex];
         int action = gotoAction.getGotoState(stateStack.top(), currentToken);
         if (isTerminal(currentToken))
@@ -626,4 +542,97 @@ void CYacc::Init()
 	InitItems();
 
     InitGotoTable();
+}
+
+
+bool CYacc::InitProduction()
+{
+    /// use 'e' as empty token.
+
+    //static char * syntax[] = {
+    //	"S->CElement", 
+    //	"CElement->DefineVariable", 
+    //	"CElement->DefineMethod", 
+    //	"DefineVariable->TYPE ID ;", 
+    //	"DefineMethod->TYPE ID ( ) { METHOD_BODY }",
+    //       "METHOD_BODY->Statement ;", 
+    //       "Statement->DefineVariable ;",
+    //       "Statement->MethodCall",
+    //       "Statement->Expression",
+    //       "MethodCall->ID ( ) ;", 
+    //   };
+
+    static char * syntax[] = {
+        "G->S", 
+        "S->n + S", 
+        "S->n"
+    };
+
+    //static char * syntax[] = {
+    //    "G->E", 
+    //    "E->E + T", 
+    //    "E->T", 
+    //    "T->T * F", 
+    //    "T->F", 
+    //    "F->( E )", 
+    //    "F->id"
+    //};
+
+    //static char * syntax[] = {
+    //    "G->A", 
+    //    "A->B C D id E",
+    //    "B->main",
+    //    "B->e",
+    //    "C->exp",
+    //    "C->e",
+    //    "D->stat",
+    //    "D->e",
+    //    "E->for",
+    //    "E->e",
+    //};
+
+    for(int i=0;i<sizeof(syntax)/sizeof(syntax[0]);++i)
+    {
+        CProduction production;
+        production.FromString(syntax[i]);
+        production.BuildLRItems();
+
+        if (production.name == "G")
+        {
+            production.comingTokens.push_back("$");
+        }
+
+        if (production.tokens.size()>0 && production.tokens[0] == production.name)
+        {
+            /// L-Recursive grammer
+            return false;
+        }
+
+        productionVec.push_back(production);
+        productionNameMap[production.name].push_back(production);
+    }
+
+
+    for(int i=0;i<productionVec.size();++i)
+    {
+        nonTernimalSet.insert(productionVec[i].name);
+    }
+
+    for(int i=0;i<productionVec.size();++i)
+    {
+        for(int k=0;k<productionVec[i].tokens.size();++k)
+        {
+            std::unordered_set<string>::iterator iter = nonTernimalSet.find(productionVec[i].tokens[k]);
+            if (iter!= nonTernimalSet.end())
+            {
+                firstSet.push_back(*iter);
+            }
+            else
+            {
+                ternimalSet.insert(productionVec[i].tokens[k]);
+            }
+        }
+    }
+
+    return true;
 }

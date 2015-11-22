@@ -33,7 +33,7 @@ private:
     bool isNonTerminal(string token);
 private:
     void Init();
-    void InitProduction();                  ///init after LR item for all production
+    bool InitProduction();                  ///init after LR item for all production. return false for L-Recursive grammer
     void InitItem(CProduction& lastLri);    ///init after item and before item for a production
     void InitItems();                       ///init after item and before item for all production
     void InitGotoTable();
