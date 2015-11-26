@@ -24,9 +24,9 @@ char CToken::AppendToken(CToken token)
 {
 	switch(type)
 	{
-	case TokenType::TypeDef:
+	case TokenType::TYPE:
 		{
-			if (token.type != TypeDef)
+			if (token.type != TYPE)
 			{
 				return 1;
 			}

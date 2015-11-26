@@ -27,6 +27,7 @@ public:
 
     int getProductionIndex(CProduction prod);
 
+    void dump();
 private:
     vector<string> getFirstSet(vector<string> token, int startIndex);
     bool isTerminal(string token);
@@ -41,11 +42,10 @@ private:
 	vector<CProduction> productionVec;
 	map<string, vector<CProduction>> productionNameMap;
 	vector<string> firstSet;
-    unordered_set<string> nonTernimalSet;
-    unordered_set<string> ternimalSet;
+    unordered_set<string> nonterminalSet;
+    unordered_set<string> terminalSet;
 
     GotoAction gotoAction;
-
 
 };
 

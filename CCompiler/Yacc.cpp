@@ -68,12 +68,12 @@ void CYacc::InitItems()
 
 bool CYacc::isTerminal(string token)
 {
-    return (token == "$") || (ternimalSet.find(token) != ternimalSet.end());
+    return (token == "$") || (terminalSet.find(token) != terminalSet.end());
 }
 
 bool CYacc::isNonTerminal(string token)
 {
-    return (nonTernimalSet.find(token) != nonTernimalSet.end());
+    return (nonterminalSet.find(token) != nonterminalSet.end());
 }
 
 vector<string> CYacc::getFirstSet(string token)
@@ -106,13 +106,13 @@ vector<string> CYacc::getFirstSet(vector<string> tokenVec, int startIndex)
 
         return getFirstSet(tokenVec, startIndex + 1);
     }
-    else if(ternimalSet.find(tokenVec[startIndex]) != ternimalSet.end())
+    else if(terminalSet.find(tokenVec[startIndex]) != terminalSet.end())
     {
         /// first set of a nonTerminalSet is itself.
         resultVec.push_back(tokenVec[startIndex]);
         return resultVec;
     }
-    else if (nonTernimalSet.find(tokenVec[startIndex]) != nonTernimalSet.end())
+    else if (nonterminalSet.find(tokenVec[startIndex]) != nonterminalSet.end())
     {
         vector<string> firstSetOfIthToken;
         map<string, bool> tokenExistMap;
@@ -132,6 +132,8 @@ vector<string> CYacc::getFirstSet(vector<string> tokenVec, int startIndex)
 
         if (hasEmpty)
         {
+            /// todo: check here to avoid recusive like:
+            /// A-eA
             vector<string> firstSetOfIthTokenTmp2 = getFirstSet(tokenVec, 1+startIndex);
             for(int j=0;j<firstSetOfIthTokenTmp2.size();++j)
             {
@@ -342,10 +344,17 @@ void CYacc::InitGotoTable()
             gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, stateIndex);
         }
     }
+}
 
+void CYacc::dump()
+{
+    printf("\n---------------terminal chars-----------\n");
+    for(unordered_set<string>::iterator iter = terminalSet.begin(); iter != terminalSet.end();++iter)
+    {
+        printf("%s\n", iter->c_str());
+    }
+    printf("\n--------------------------------------------\n");
     gotoAction.dump();
-
-
 }
 
 void CYacc::processToken(CLex lex)
@@ -549,24 +558,35 @@ bool CYacc::InitProduction()
 {
     /// use 'e' as empty token.
 
-    //static char * syntax[] = {
-    //	"S->CElement", 
-    //	"CElement->DefineVariable", 
-    //	"CElement->DefineMethod", 
-    //	"DefineVariable->TYPE ID ;", 
-    //	"DefineMethod->TYPE ID ( ) { METHOD_BODY }",
-    //       "METHOD_BODY->Statement ;", 
-    //       "Statement->DefineVariable ;",
-    //       "Statement->MethodCall",
-    //       "Statement->Expression",
-    //       "MethodCall->ID ( ) ;", 
-    //   };
-
     static char * syntax[] = {
-        "G->S", 
-        "S->n + S", 
-        "S->n"
-    };
+        "G->S",
+    	"S->CElement S",
+    	"CElement->DefineVariable", 
+        "CElement->DefineMethod", 
+        "CElement->Statements", 
+    	"DefineVariable->TYPE id ;", 
+    	"DefineMethod->TYPE id ( ) { METHOD_BODY }",
+        "METHOD_BODY->Statements", 
+        "Statements->Statement Statements",
+        "Statements->Statement ;", 
+        "Statement->DefineVariable",
+        "Statement->MethodCall",
+        "Statement->Expression ;",
+        "MethodCall->id ( ) ;", 
+        "DefineVariable->TYPE id DV", 
+        "DV->, id DV",
+        "DV->;",
+        "Expression->VAL + Expression",
+        "Expression->VAL - Expression",
+        "Expression->VAL = Expression",
+        "Expression->( Expression )",
+        "Expression->VAL",
+        "VAL->id",
+        "VAL->num",
+        "DefineMethod->TYPE id ( ARG_LIST )",
+        "ARG_LIST->TYPE id",
+       };
+
 
     //static char * syntax[] = {
     //    "G->E", 
@@ -605,6 +625,7 @@ bool CYacc::InitProduction()
         if (production.tokens.size()>0 && production.tokens[0] == production.name)
         {
             /// L-Recursive grammer
+            printf("ERROR at: %s %d\n", __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -615,21 +636,21 @@ bool CYacc::InitProduction()
 
     for(int i=0;i<productionVec.size();++i)
     {
-        nonTernimalSet.insert(productionVec[i].name);
+        nonterminalSet.insert(productionVec[i].name);
     }
 
     for(int i=0;i<productionVec.size();++i)
     {
         for(int k=0;k<productionVec[i].tokens.size();++k)
         {
-            std::unordered_set<string>::iterator iter = nonTernimalSet.find(productionVec[i].tokens[k]);
-            if (iter!= nonTernimalSet.end())
+            std::unordered_set<string>::iterator iter = nonterminalSet.find(productionVec[i].tokens[k]);
+            if (iter!= nonterminalSet.end())
             {
                 firstSet.push_back(*iter);
             }
             else
             {
-                ternimalSet.insert(productionVec[i].tokens[k]);
+                terminalSet.insert(productionVec[i].tokens[k]);
             }
         }
     }

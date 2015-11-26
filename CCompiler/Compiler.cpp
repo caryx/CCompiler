@@ -13,6 +13,7 @@ CCompiler::~CCompiler(void)
 void CCompiler::Compile(const string& str)
 {
 	lex.GetToken(str);
-	//lex.Dump();
-    yacc.processToken(lex);
+	lex.Dump();
+    //yacc.dump();
+    //yacc.processToken(lex);
 }

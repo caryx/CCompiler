@@ -36,9 +36,9 @@ enum VariableType
 enum TokenType
 {
 	Invalid =0, 
-	TypeDef, 
+	TYPE, 
 	Const,
-	Variable,
+	ID,
 	Keyword,
 	Operator,
 	Mark,
@@ -50,9 +50,9 @@ enum TokenType
 //char* TypeStrName[] = 
 //{
 //	"Invalid",
-//	"TypeDef", 
+//	"TYPE", 
 //	"Const",
-//	"Variable",
+//	"ID",
 //	"Keyword",
 //	"Operator",
 //	"Mark",

@@ -6,7 +6,7 @@
 #include "Token.h"
 using namespace std;
 
-class TypeDef
+class TYPE
 {
 public:
 	int typeIndex;

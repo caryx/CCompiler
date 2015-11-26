@@ -22,7 +22,7 @@ CToken CLex::Str2Token(const string& str)
 	{
 		if (str == typeVec[i].str)
 		{
-			token.type = TokenType::TypeDef;
+			token.type = TokenType::TYPE;
 			token.variableType = typeVec[i].variableType;
 			token.tokenStr = str;
 			keepSearching = 0;
@@ -65,7 +65,7 @@ CToken CLex::Str2Token(const string& str)
 	// variable
 	if (keepSearching && IsVariable(str))
 	{
-		token.type = TokenType::Variable;
+		token.type = TokenType::ID;
 		token.tokenStr = str;
 		keepSearching = 0;
 	}
@@ -90,9 +90,9 @@ void CLex::Dump()
 	char* TypeStrName[] = 
 	{
 		"Invalid",
-		"TypeDef", 
+		"TYPE", 
 		"Const",
-		"Variable",
+		"ID",
 		"Keyword",
 		"Operator",
 		"Mark",
@@ -101,11 +101,21 @@ void CLex::Dump()
 
 	for(int i=0;i<tokenVec.size();++i)
 	{
-		if (tokenVec[i].type == TokenType::TypeDef)
+		if (tokenVec[i].type == TokenType::TYPE)
 		{
-			printf("%s \t type:%s \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].variableType);
+			printf("%s \t type:%s \t VariableType:\t%d \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].variableType);
 			//printf("%s \t type:%d \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type, tokenVec[i].variableType);
-		}
+        }
+        else if (tokenVec[i].type == TokenType::ID)
+        {
+            printf("%s \t type:%s \t ID:\t%s \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].tokenStr.c_str());
+            //printf("%s \t type:%d \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type, tokenVec[i].variableType);
+        }
+        else if (tokenVec[i].type == TokenType::Mark)
+        {
+            printf("%s \t type:%s \t Mark:\t%s \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].tokenStr.c_str());
+            //printf("%s \t type:%d \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type, tokenVec[i].variableType);
+        }
 		else
 		{
 			printf("%s \t type:%s \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type]);
