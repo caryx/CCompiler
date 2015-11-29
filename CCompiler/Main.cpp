@@ -30,12 +30,13 @@ int main()
 	string input;
 	char *testfile = "../main.c";
 	FILE* file = fopen(testfile, "rb");
-
+    int fileOpened = 0;
 	if (file)
 	{
 		char buf[1025];
 		while(1)
 		{
+            fileOpened = 1;
 			memset(buf, 0, sizeof(buf));
 			int size = fread(buf, 1, 1024, file);
 			string str(buf);
@@ -57,7 +58,14 @@ int main()
 	}
 	else
 	{
-		printf("failed to open source file.");
+        if (fileOpened)
+        {
+            printf("Empty source file.\n");
+        }
+        else
+        {
+		    printf("failed to open source file.\n");
+        }
 	}
 
 	return 0;

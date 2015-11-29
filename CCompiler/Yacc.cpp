@@ -175,7 +175,7 @@ void CYacc::getFullState(YaccState& state)
             /// ¦Â==¦Å, aCT = a
             /// ¦Â!=¦Å, act = FIRST(¦Â)
             /// todo: If FIRST(¦Â) = {a,b,¦Å}, there could be problem here.
-            vector<string> aCT;
+            vector<string> aCT; //aCT means available coming token
             for(int i=0;i<tmpFirstSet.size();++i)
             {
                 if (tmpFirstSet[i] == "e" || tmpFirstSet[i] == "" )
@@ -222,17 +222,17 @@ void CYacc::getFullState(YaccState& state)
 
 void CYacc::InitGotoTable()
 {
-    vector<string> tokenVec;
-    tokenVec.push_back("e");
-    tokenVec.push_back("G");
-    vector<string> firstSet = getFirstSet(tokenVec);
-    for(int i=0;i<firstSet.size();++i)
-    {
+    //vector<string> tokenVec;
+    //tokenVec.push_back("e");
+    //tokenVec.push_back("G");
+    //vector<string> firstSet = getFirstSet(tokenVec);
+    //for(int i=0;i<firstSet.size();++i)
+    //{
 
-        printf("%s ", firstSet[i].c_str());
-    }
+    //    printf("%s ", firstSet[i].c_str());
+    //}
 
-    printf("\n-----------------------------------------------\n");
+    //printf("\n------------first set test done-----------------------------------\n");
 
     if (productionVec.size() <= 0)
     {
@@ -344,6 +344,11 @@ void CYacc::InitGotoTable()
             gotoAction.setGotoState(stateMove.prevState, stateMove.moveStr, stateIndex);
         }
     }
+
+    {
+        /// Add $ action for G->S .
+
+    }
 }
 
 void CYacc::dump()
@@ -355,17 +360,15 @@ void CYacc::dump()
     }
     printf("\n--------------------------------------------\n");
     gotoAction.dump();
+    printf("\n--------------------------------------------\n");
 }
 
 void CYacc::processToken(CLex lex)
 {
     //////////////////////////////////////////////////////////////////////////
     // Test here.
-    vector<string> testTokenVec;
-    testTokenVec.push_back("c");
-    testTokenVec.push_back("d");
-    testTokenVec.push_back("d");
-    testTokenVec.push_back("$");
+    vector<CToken> testTokenVec = lex.getTokenVec();
+    testTokenVec.push_back(CToken::getEndToken());
     int tokenIndex = 0;
     stack<int> stateStack;
     stateStack.push(0);
@@ -379,11 +382,16 @@ void CYacc::processToken(CLex lex)
         }
 
         /// todo: need to check if the coming token is in the comingTokenList of current production.
-        string currentToken = testTokenVec[tokenIndex];
+        string currentToken = testTokenVec[tokenIndex].toString();
         int action = gotoAction.getGotoState(stateStack.top(), currentToken);
         if (isTerminal(currentToken))
         {
-            if (action > 0)
+            if (GotoAction::INVALID_ACTION == action)
+            {
+                printf("Error when reducing. Invalid tokens to reduce:%s\n", testTokenVec[tokenIndex].info().c_str());
+                return;
+            }
+            else if (action > 0)
             {
                 /// move in a token
                 stateStack.push(action);
@@ -395,20 +403,22 @@ void CYacc::processToken(CLex lex)
                 action = -action;
                 action -= 1;
 
-                if (action == 0)
-                {
-                    /// accept if all tokens were processed.
-                    if ((testTokenVec.size() == tokenIndex + 1) && testTokenVec[tokenIndex] == "$")
-                    {
-                        printf("Accept\n");
-                        return ;
-                    }
-                    else
-                    {
-                        printf("Error\n");
-                    }
-                }
-                else
+                //if (action == 0)
+                //{
+                //    /// accept if all tokens were processed.
+                //    if ((testTokenVec.size() == tokenIndex + 1) && testTokenVec[tokenIndex].toString() == "$")
+                //    {
+                //        printf("Accept\n");
+                //        return ;
+                //    }
+                //    else
+                //    {
+                //        //printf("Error:%s\n", currentToken.c_str());
+                //        printf("Error:%s\n", testTokenVec[tokenIndex].info().c_str());
+                //        break;
+                //    }
+                //}
+                //else
                 {
                     /// reduce with action-th production.
                     int prodTokenCount = productionVec[action].tokens.size();
@@ -423,11 +433,19 @@ void CYacc::processToken(CLex lex)
                             }
                             else
                             {
-                                printf("Error when reducing. Invalid tokens to reduce.");
+                                printf("Error when reducing. Invalid tokens to reduce:%s\n", testTokenVec[tokenIndex].info().c_str());
+                                return;
                             }
                         }
 
                         tokenStack.push(productionVec[action].name);
+
+                        if (tokenStack.size() == 1 && tokenStack.top() == "G" && stateStack.size() == 1 && stateStack.top() == 0)
+                        {
+                            printf("Accept\n");
+                            return ;
+                        }
+
                         int reduceAction = gotoAction.getGotoState(stateStack.top(), productionVec[action].name);
                         printf("%s\n", productionVec[action].toString().c_str());
                         stateStack.push(reduceAction);
@@ -561,30 +579,65 @@ bool CYacc::InitProduction()
     static char * syntax[] = {
         "G->S",
     	"S->CElement S",
+        "S->CElement",
     	"CElement->DefineVariable", 
         "CElement->DefineMethod", 
-        "CElement->Statements", 
-    	"DefineVariable->TYPE id ;", 
+    	"DefineVariable->TYPE ID_LIST ;", 
+        "ID_LIST->ID_ITEM , ID_LIST",
+        "ID_LIST->ID_ITEM",
+        "ID_ITEM->id", 
+        "ID_ITEM->id = Expression", 
+        //"DefineVariable->TYPE id = num ;", 
+        //"DefineVariable->TYPE id = Expression ;", 
+    	"DefineMethod->TYPE id ( TYPE_ARG_LIST ) { METHOD_BODY }",
+        "DefineMethod->TYPE id ( TYPE_ARG_LIST ) { }",
     	"DefineMethod->TYPE id ( ) { METHOD_BODY }",
+        "DefineMethod->TYPE id ( ) { }",
         "METHOD_BODY->Statements", 
-        "Statements->Statement Statements",
-        "Statements->Statement ;", 
+        "Statements->Statement Statements", 
+        "Statements->Statement", 
+        "Statement->{ Statements }", 
         "Statement->DefineVariable",
-        "Statement->MethodCall",
+        "Statement->MethodCall ;",
+        "Statement->for ( Expression ; Expression ; Expression ) Statement",
+        "Statement->while ( Expression ) Statement",
+        "Statement->do Statement while ( Expression ) ;",
+        "MethodCall->id ( )", 
+        "MethodCall->id ( ARG_LIST )", 
         "Statement->Expression ;",
-        "MethodCall->id ( ) ;", 
-        "DefineVariable->TYPE id DV", 
-        "DV->, id DV",
-        "DV->;",
-        "Expression->VAL + Expression",
-        "Expression->VAL - Expression",
-        "Expression->VAL = Expression",
+        //"MethodCall->id ( ) ;", 
+        //"MethodCall->id ( ARG ) ;", 
+        //"MethodCall->id ( ARG ARG ) ;", 
+        //"MethodCall->id ( ARG ARG ARG ) ;", 
+        //"ARG->id",
+        //"ARG->num",
+        "Expression->Expression_ + Expression",
+        "Expression->Expression_ - Expression",
+        "Expression->Expression_ = Expression",
+        //"Expression->Expression_ >= Expression",
+        //"Expression->Expression_ <= Expression",
+        //"Expression->Expression_ == Expression",
+        //"Expression->Expression_ != Expression",
         "Expression->( Expression )",
-        "Expression->VAL",
+        "Expression->Expression_",
+        "Expression_->( Expression )",
+        "Expression_->VAL",
+        "Expression_->VAL * Expression_",
+        "Expression_->VAL / Expression_",
+        "VAL->MethodCall",
         "VAL->id",
         "VAL->num",
-        "DefineMethod->TYPE id ( ARG_LIST )",
-        "ARG_LIST->TYPE id",
+        "TYPE->int",
+        "TYPE->double",
+        "TYPE->float",
+        "TYPE->short",
+
+        "ARG_LIST->ARG , ARG_LIST",
+        "ARG_LIST->ARG",
+        "ARG->VAL",
+        "TYPE_ARG_LIST->TYPE_ARG , TYPE_ARG_LIST",
+        "TYPE_ARG_LIST->TYPE_ARG",
+        "TYPE_ARG->TYPE id",
        };
 
 

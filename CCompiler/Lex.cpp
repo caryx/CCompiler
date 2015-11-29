@@ -11,10 +11,13 @@ CLex::~CLex(void)
 {
 }
 
-CToken CLex::Str2Token(const string& str)
+CToken CLex::Str2Token(const string& str, int lineCount, int columnCount)
 {
 	//printf("%s\n", str.c_str());
 	CToken token;
+    token.lineIndex = lineCount;
+    token.colIndex = columnCount;
+
 	char keepSearching = 1;
 
 	// typedef
@@ -56,7 +59,8 @@ CToken CLex::Str2Token(const string& str)
 	{
 		if (str == biOpeartorVec[i])
 		{
-			token.type = TokenType::Operator;
+			//token.type = TokenType::Operator;
+            token.type = TokenType::Mark;   // merge opertaor to mark
 			token.tokenStr = str;
 			keepSearching = 0;
 		}
@@ -103,22 +107,22 @@ void CLex::Dump()
 	{
 		if (tokenVec[i].type == TokenType::TYPE)
 		{
-			printf("%s \t type:%s \t VariableType:\t%d \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].variableType);
+			printf("%s \t type:%s \t VariableType:\t%d \tinfo:%s\n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].variableType, tokenVec[i].info().c_str());
 			//printf("%s \t type:%d \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type, tokenVec[i].variableType);
         }
         else if (tokenVec[i].type == TokenType::ID)
         {
-            printf("%s \t type:%s \t ID:\t%s \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].tokenStr.c_str());
+            printf("%s \t type:%s \t ID:\t%s \tinfo:%s\n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].tokenStr.c_str(), tokenVec[i].info().c_str());
             //printf("%s \t type:%d \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type, tokenVec[i].variableType);
         }
         else if (tokenVec[i].type == TokenType::Mark)
         {
-            printf("%s \t type:%s \t Mark:\t%s \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].tokenStr.c_str());
+            printf("%s \t type:%s \t Mark:\t%s \tinfo:%s\n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].tokenStr.c_str(), tokenVec[i].info().c_str());
             //printf("%s \t type:%d \t VariableType:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type, tokenVec[i].variableType);
         }
 		else
 		{
-			printf("%s \t type:%s \n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type]);
+			printf("%s \t type:%s \tinfo:%s\n", tokenVec[i].tokenStr.c_str(), TypeStrName[tokenVec[i].type], tokenVec[i].info().c_str());
 			//printf("%s \t type:%d \n", tokenVec[i].tokenStr.c_str(), tokenVec[i].type);
 		}
 	}
@@ -126,20 +130,47 @@ void CLex::Dump()
 
 void CLex::GetToken(const string& str)
 {
-	int lineCount=0, curCount=0, index = 0;
 	char moreProcess = 0;
 	char lastChar = 0;
 	CToken token;
 	string tokenStr;
+    int lineCount = 1;
+    int columnCount = 1;
+    int index = 0;
 
-	while(index < str.size())
+
+    int tmpLineCount = 0;
+    int tmpColumnCount = 0;
+
+	while(index <= str.size())
 	{
 		char takeCurrentChar = 0;
-		char c = str[index++];
+		char c = 0;
+        if (index == str.size())
+        {
+            c = '\n';   // add a new line in the end to force the last item to be parsed.
+            index++;
+        }
+        else
+        {
+            c = str[index++];
+        }
+        ++columnCount;
 		string cur_str;
 		cur_str.push_back(c);
+
+
 		if (IsSpliter(c) || IsNewLine(c))
 		{
+            if (IsNewLine(c))
+            {
+                tmpLineCount = lineCount/2; // \r\n, lineCount inc for 2 times
+                tmpColumnCount = columnCount;
+
+                ++lineCount;
+                columnCount=0;
+            }
+
 			if (tokenStr.empty())
 			{
 				continue;
@@ -149,7 +180,7 @@ void CLex::GetToken(const string& str)
 				if (IsSpliter(c) || lastChar != '\\')
 				{
 					// new token
-					if (PushToken(tokenStr))
+					if (PushToken(tokenStr, tmpLineCount, tmpColumnCount))
 					{
 						printf("Error:%s\n", tokenStr.c_str());
 						break;
@@ -162,7 +193,7 @@ void CLex::GetToken(const string& str)
 			// new token
 			if (tokenStr.size())
 			{
-				if (PushToken(tokenStr))
+				if (PushToken(tokenStr, tmpLineCount, tmpColumnCount))
 				{
 					printf("Error:%s\n", tokenStr.c_str());
 					break;
@@ -172,7 +203,7 @@ void CLex::GetToken(const string& str)
 			/// take the new 
 			tokenStr.push_back(c);
 			// new token
-			if (PushToken(tokenStr))
+			if (PushToken(tokenStr, lineCount/2, columnCount))
 			{
 				printf("Error:%s\n", tokenStr.c_str());
 				break;
@@ -183,7 +214,7 @@ void CLex::GetToken(const string& str)
 			// new token
 			if (tokenStr.size())
 			{
-				if (PushToken(tokenStr))
+				if (PushToken(tokenStr, tmpLineCount, tmpColumnCount))
 				{
 					printf("Error:%s\n", tokenStr.c_str());
 					break;
@@ -193,7 +224,7 @@ void CLex::GetToken(const string& str)
 			/// take the new 
 			tokenStr.push_back(c);
 			// new token
-			if (PushToken(tokenStr))
+			if (PushToken(tokenStr, lineCount/2, columnCount))
 			{
 				printf("Error:%s\n", tokenStr.c_str());
 				break;
@@ -205,6 +236,12 @@ void CLex::GetToken(const string& str)
 			{
 				continue;
 			}
+
+            if (tokenStr.size() == 0)
+            {
+                tmpLineCount = lineCount/2; // \r\n, lineCount inc for 2 times
+                tmpColumnCount = columnCount;
+            }
 
 			tokenStr.push_back(c);
 		}
@@ -260,7 +297,7 @@ char CLex::IsBiOerator(const string c)
 void CLex::Init()
 {
     char spliters[] = {' ', '\t'};
-    char* biOperators[] = {"+", "-", "*", "/", "=", "^", "%"};
+    char* biOperators[] = {"+", "-", "*", "/", "=", "^", "%", "==", "!=", ">=", "<=", "++", "--"};
     char* keywords[] = {"for", "while", "do", "return", "goto"};
     Str_VariableType_Map types[] = {
         {"void", VariableType::VOID}, 
@@ -357,9 +394,9 @@ char CLex::IsVariable(const string& str)
     return 1;
 }
 
-bool CLex::PushToken(string &tokenStr)
+bool CLex::PushToken(string &tokenStr, int lineCount, int columnCount)
 {
-    CToken token = Str2Token(tokenStr);
+    CToken token = Str2Token(tokenStr, lineCount, columnCount);
     if (!token.IsEmpty())
     {
         if (tokenVec.size() == 0 || tokenVec[tokenVec.size()-1].AppendToken(token))
@@ -373,4 +410,9 @@ bool CLex::PushToken(string &tokenStr)
     }
 
     return 1;
+}
+
+const vector<CToken>& CLex::getTokenVec() const
+{
+    return tokenVec;
 }

@@ -30,18 +30,19 @@ public:
 
 	void Dump();
 	void GetToken(const string& str);
-	CToken Str2Token(const string& str);
+	CToken Str2Token(const string& str, int lineCount, int columnCount);
 	char IsSpliter(const char& c);
 	char IsNewLine(const char& c);
 	char IsMark(const string c);
 	char IsBiOerator(const string c);
 
+    const vector<CToken>& getTokenVec() const;
 private:
 	void Init();
 	void Init_Type();
 	char IsNumber(const string& str);
 	char IsVariable(const string& str);
-	bool PushToken(string &tokenStr);
+	bool PushToken(string &tokenStr, int lineCount, int columnCount);
 
 private:
 	vector<CToken> tokenVec;

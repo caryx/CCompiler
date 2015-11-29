@@ -1,27 +1,31 @@
 
-int Add(int x, int y)
-{
-	return x+	y;
-}
-
-double Multi(double x, double y)
-{
-	return x*y;
-}
-
-double Div(double x, double y)
-{
-	return x/y;
-}
-
+int a = 1;
 int main()
 {
-	int a;
-	double b;
-	long c;
-	a = 1;
-	b = 234.5;
-	c = a + b;
-	b = Add(a, c);
-	return a+c;
+int a = sum(2,3,4,5,6,7) * sum(2,3,4,5,6,7);
+int x, y=2, z;
+add(1,2,3);
+add(1,2,3,1,2,3,1,2,3);
+add(1,2);
+}
+
+int Log(int level, int str)
+{
+	{
+		printf(1,2);
+		printf(1,2);
+	}
+	2;
+
+
+	{
+		printf(1,2);
+		
+		{
+			printf(1,2);
+			printf(1,2);
+		}	
+	
+		printf(1,2);
+	}	
 }

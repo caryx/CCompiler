@@ -23,5 +23,9 @@ int main()
 	b = 234.5;
 	c = a + b;
 	b = Add(a, c);
+	
+	
+add(1,2,3);
+add(1,2,3,1,2,3,1,2,3);
 	return a+c;
 }

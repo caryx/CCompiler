@@ -43,7 +43,8 @@ enum TokenType
 	Operator,
 	Mark,
 	Number,
-	Semicolon, 
+	Semicolon,
+    EndDollar,
 };
 
 //

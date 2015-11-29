@@ -5,7 +5,6 @@ CCompiler::CCompiler(void)
 {
 }
 
-
 CCompiler::~CCompiler(void)
 {
 }
@@ -14,6 +13,6 @@ void CCompiler::Compile(const string& str)
 {
 	lex.GetToken(str);
 	lex.Dump();
-    //yacc.dump();
-    //yacc.processToken(lex);
+    yacc.dump();
+    yacc.processToken(lex);
 }

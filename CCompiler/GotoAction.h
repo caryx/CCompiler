@@ -23,6 +23,8 @@ public:
     int getGotoState(int stateIndex, string token);
 
     void dump();
+
+    static const int INVALID_ACTION = 2<<31;
 private:
     map<CProduction,int> prodStateMap;  // a map from a product to the state containing it.
     vector<map<string, int>> gotoTable;

@@ -87,7 +87,7 @@ int GotoAction::getGotoState(int stateIndex, string token)
         return gotoTable[stateIndex][token];
     }
 
-    return -1;
+    return GotoAction::INVALID_ACTION;
 }
 
 void GotoAction::dump()
