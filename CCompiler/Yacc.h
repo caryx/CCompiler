@@ -30,17 +30,20 @@ public:
     void dump();
 
 	void store();
-	void load();
+	bool load();
 private:
     vector<string> getFirstSet(vector<string> token, int startIndex);
     bool isTerminal(string token);
     bool isNonTerminal(string token);
 private:
+	void Reset();
     void Init();
     bool InitProduction();                  ///init after LR item for all production. return false for L-Recursive grammer
     void InitItem(CProduction& lastLri);    ///init after item and before item for a production
     void InitItems();                       ///init after item and before item for all production
     void InitGotoTable();
+
+private:
 	//vector<CProduction> lrItems;
 	vector<CProduction> productionVec;
 	map<string, vector<CProduction>> productionNameMap;
@@ -50,6 +53,8 @@ private:
 
     GotoAction gotoAction;
 
+	const char* productPath = "./!productionVec.txt";
+	const char* terminalPath = "./!terminalSet.txt";
 };
 
 #endif

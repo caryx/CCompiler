@@ -25,11 +25,14 @@ public:
     void dump();
 
 	void store();
-	void load();
-
-    static const int INVALID_ACTION = 2<<31;
+	bool load();
+	void Reset();
+    static const int INVALID_ACTION = 1<<31;
 private:
-    map<CProduction,int> prodStateMap;  // a map from a product to the state containing it.
+    //map<CProduction,int> prodStateMap;  // a map from a product to the state containing it.
     vector<map<string, int>> gotoTable;
+
+
+	const char* filePath = "./!actionTable.txt";
 };
 

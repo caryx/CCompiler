@@ -403,22 +403,6 @@ void CYacc::processToken(CLex lex)
                 action = -action;
                 action -= 1;
 
-                //if (action == 0)
-                //{
-                //    /// accept if all tokens were processed.
-                //    if ((testTokenVec.size() == tokenIndex + 1) && testTokenVec[tokenIndex].toString() == "$")
-                //    {
-                //        printf("Accept\n");
-                //        return ;
-                //    }
-                //    else
-                //    {
-                //        //printf("Error:%s\n", currentToken.c_str());
-                //        printf("Error:%s\n", testTokenVec[tokenIndex].info().c_str());
-                //        break;
-                //    }
-                //}
-                //else
                 {
                     /// reduce with action-th production.
                     int prodTokenCount = productionVec[action].tokens.size();
@@ -563,12 +547,29 @@ void CYacc::processToken(CLex lex)
 //    gotoAction.dump();
 //}
 
+void CYacc::Reset()
+{
+	productionVec.clear();
+	productionNameMap.clear();
+	firstSet.clear();
+	nonterminalSet.clear();
+	terminalSet.clear();
+
+	gotoAction.Reset();;
+}
+
 void CYacc::Init()
 {
-	InitProduction();
-	InitItems();
+	if (!load())
+	{
+		Reset();
+		InitProduction();
+		InitItems();
 
-    InitGotoTable();
+		InitGotoTable();
+
+		store();
+	}
 }
 
 
@@ -587,9 +588,9 @@ bool CYacc::InitProduction()
         "ID_LIST->ID_ITEM",
         "ID_ITEM->id", 
         "ID_ITEM->id = Expression", 
-    	"DefineMethod->TYPE id ( TYPE_ARG_LIST ) { METHOD_BODY }",
+	 	"DefineMethod->TYPE id ( TYPE_ARG_LIST ) { METHOD_BODY }",
         "DefineMethod->TYPE id ( TYPE_ARG_LIST ) { }",
-    	"DefineMethod->TYPE id ( ) { METHOD_BODY }",
+	    "DefineMethod->TYPE id ( ) { METHOD_BODY }",
         "DefineMethod->TYPE id ( ) { }",
         "METHOD_BODY->Statements", 
         "Statements->Statement Statements", 
@@ -701,4 +702,77 @@ bool CYacc::InitProduction()
     }
 
     return true;
+}
+
+
+bool storeStr(string& str, const char * filePath);
+bool loadStr(string& str, const char* filePath);
+vector<string > split(string& s, char delim);
+
+void CYacc::store()
+{
+	gotoAction.store();
+	//filePath
+	//vector<CProduction> productionVec;
+	string str;
+	for (int i = 0; i < productionVec.size(); ++i)
+	{
+		str += productionVec[i].store();
+		str += SPLITER3;
+	}
+
+	storeStr(str, productPath);
+
+	//unordered_set<string> terminalSet; // should be stored.
+	str = "";
+	for (unordered_set<string>::iterator iter = terminalSet.begin(); iter != terminalSet.end(); ++iter)
+	{
+		str += *iter;
+		str += SPLITER3;
+	}
+
+	storeStr(str, terminalPath);
+}
+
+bool CYacc::load()
+{
+	/// 1. Goto table.
+	bool result = gotoAction.load();
+	if (result == false)
+	{
+		return false;
+	}
+
+
+	/// 2. productionVec
+	string str;
+	result = loadStr(str, productPath);	
+	if (result == false)
+	{
+		return false;
+	}
+
+	vector<string> strVec = split(str, SPLITER3);
+	for (int i = 0; i < strVec.size(); ++i)
+	{
+		CProduction prod;
+		prod.load(strVec[i]);
+
+		productionVec.push_back(prod);
+	}
+
+	/// 3. terminalSet
+	result = loadStr(str, terminalPath);
+	if (result == false)
+	{
+		return false;
+	}
+
+	strVec = split(str, SPLITER3);
+	for (int i = 0; i < strVec.size(); ++i)
+	{
+		terminalSet.insert(strVec[i]);
+	}
+
+	return true;
 }

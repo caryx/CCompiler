@@ -119,13 +119,62 @@ void GotoAction::dump()
         }
     }
 }
+int str2int(string str);
+string int2str(int result);
+bool storeStr(string& str, const char * filePath);
+bool loadStr(string& str, const char * filePath);
+vector<string > split(string& s, char delim);
 
 void GotoAction::store()
 {
+	// vector<map<string, int>> gotoTable; // this table should be stored.
+	string result;
+	for (int i = 0; i < gotoTable.size(); ++i)
+	{
+		for (map<string, int>::iterator iter = gotoTable[i].begin(); iter != gotoTable[i].end(); ++iter)
+		{
+			result += iter->first;
+			result += SPLITER1;
+			result += int2str(iter->second);
+			result += SPLITER1;
+		}
 
+		result += SPLITER2;
+	}
+
+	storeStr(result, filePath);
 }
 
-void GotoAction::load()
+bool GotoAction::load()
 {
+	string str;
+	bool result = loadStr(str, filePath); 
+	if (result == false)
+	{
+		return false;
+	}
 
+	vector<string> tableItemVec = split(str, SPLITER2);
+	gotoTable.resize(tableItemVec.size());
+	for (int i = 0; i < tableItemVec.size(); ++i)
+	{
+		vector<string> mapItemVec = split(tableItemVec[i], SPLITER1);
+		for (int k = 0; k < tableItemVec.size(); ++k)
+		{
+			if (mapItemVec.size() == 2)
+			{
+				string str = mapItemVec[0];
+				string str1 = mapItemVec[1];
+				int action = str2int(str1);
+				gotoTable[i][str] = action;
+			}
+		}
+	}
+
+	return true;
+}
+
+void GotoAction::Reset()
+{
+	gotoTable.clear();
 }

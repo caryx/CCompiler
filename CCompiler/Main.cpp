@@ -1,7 +1,9 @@
 // CCompiler.cpp : Defines the entry point for the console application.
 //
 #include <cstdio>
+#include <io.h>
 #include "Compiler.h"
+//#include <Windows.h>
 
 
 vector <string> split(string& s, string& delim)
@@ -13,11 +15,11 @@ vector <string> split(string& s, string& delim)
 	while (index != std::string::npos)
 	{
 		tmpStr = s.substr(last, index - last);
-		if (tmpStr.size() == 0)
+		if (tmpStr.size() != 0)
 		{
-			continue;
+			ret.push_back(tmpStr);
 		}
-		ret.push_back(tmpStr);
+
 		last = index + 1;
 		index = s.find_first_of(delim, last);
 	}
@@ -37,6 +39,13 @@ vector<string > split(string& s, char delim)
 	return split(s, spliter);
 }
 
+string int2str(int result)
+{
+	char buf[20] = { 0 };
+	sprintf(buf, "%d", result);
+	string str(buf);
+	return str;
+}
 
 int str2int(std::string str)
 {
@@ -58,6 +67,75 @@ int str2int(std::string str)
 	return result;
 }
 
+bool storeStr(string& str, const char * filePath)
+{
+	int fileExist = access(filePath, 0);
+	if (fileExist == 0)
+	{
+		/// file does EXIST
+		remove(filePath);
+	}
+
+	FILE* file = fopen(filePath, "w+");
+	if (file == NULL)
+	{
+		return false;
+	}
+
+	fwrite(str.c_str(), str.size(), 1, file);
+	fclose(file);
+
+	return true;
+}
+
+bool loadStr(string& str, const char* filePath)
+{
+	int fileExist = access(filePath, 0);
+	if (fileExist != 0)
+	{
+		/// file does not exist
+		return false;
+	}
+	FILE* file = fopen(filePath, "r+");
+	if (file == NULL)
+	{
+		return false;
+	}
+
+	fseek(file, 0, SEEK_END);
+	int length = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	char* buf = new char[length + 1];
+	memset(buf, 0, length + 1);
+	fread(buf, length + 1, 1, file);
+	fclose(file);
+	str = buf;
+	delete[] buf;
+	return true;
+}
+
+char* getExePath()
+{
+	/**/
+	int size = 32;
+	int dwRet = 32;
+	char *Buffer = (char*)malloc(sizeof(char)*dwRet);
+	//memset(Buffer, 0, dwRet*sizeof(char));
+	//// get windoes path
+	//// got path
+	//dwRet = GetModuleFileNameA(NULL, Buffer, dwRet);
+	//if (dwRet == 0)
+	//	return NULL;
+	//while (size == dwRet)
+	//{
+	//	size *= 2;
+	//	Buffer = (char*)realloc(Buffer, sizeof(char)*size);
+	//	memset(Buffer, 0, size*sizeof(char));
+	//	dwRet = GetModuleFileNameA(NULL, Buffer, size);
+	//}
+	return Buffer;
+}
 
 
 void TestSyntax()
@@ -83,20 +161,6 @@ int x = add(1,2);
 int main()
 {
 	//TestSyntax();
-	{
-		CProduction prod;
-		prod.index = 2;
-		prod.name = "S";
-		prod.tokens.push_back("F");
-		prod.tokens.push_back("T");
-		prod.comingTokens.push_back("-");
-		prod.comingTokens.push_back("+");
-
-		string result = prod.store();
-
-		CProduction prod2;
-		prod2.load(result);
-	}
 
 	string input;
 	char *testfile = "../main.c";
