@@ -51,6 +51,12 @@ int str2int(std::string str)
 {
 	int result = 0;
 	int index = 0;
+	int flag = 1;
+	if (str[0] == '-')
+	{
+		index++;
+		flag = -1;
+	}
 	while (index < str.size())
 	{
 		if (str[index] > '9' || str[index] < 0)
@@ -64,7 +70,7 @@ int str2int(std::string str)
 		++index;
 	}
 	
-	return result;
+	return result*flag;
 }
 
 bool storeStr(string& str, const char * filePath)

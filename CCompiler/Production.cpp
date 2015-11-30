@@ -291,6 +291,13 @@ void CProduction::load(string& str)
 		tokens =  split(strArray[2], SPLITER1);
 		comingTokens = split(strArray[3], SPLITER1);
 	}
+	if (strArray.size() == 3)
+	{
+		index = str2int(strArray[0]);
+		name = strArray[1];
+
+		tokens = split(strArray[2], SPLITER1);
+	}
 	else
 	{
 		printf("Invalid index. Pos 2.");
