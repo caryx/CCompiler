@@ -1,5 +1,10 @@
 #include "Production.h"
 
+vector <string> split(string& s, string& delim);
+// split string
+vector<string > split(string& s, char delim);
+int str2int(std::string str);
+
 
 CProduction::CProduction(void)
 {
@@ -245,4 +250,50 @@ string CProduction::toString()
     }
     
     return result;
+}
+
+
+string CProduction::store()
+{
+	const int bufSize = 8;
+	char buf[bufSize] = { 0 };
+	sprintf(buf, "%d", index);
+	string result = buf;
+
+	result += SPLITER2;
+	result += name;
+	result += SPLITER2;
+	for (int i = 0; i < tokens.size(); ++i)
+	{
+		result += tokens[i];
+		result += SPLITER1;
+	}
+
+	result += SPLITER2;
+
+	for (int i = 0; i < comingTokens.size(); ++i)
+	{
+		result += comingTokens[i];
+		result += SPLITER1;
+	}
+
+	return result;
+}
+
+void CProduction::load(string& str)
+{
+	vector<string>  strArray = split(str, SPLITER2);
+	if (strArray.size() == 4)
+	{
+		index = str2int(strArray[0]);
+		name = strArray[1];
+
+		tokens =  split(strArray[2], SPLITER1);
+		comingTokens = split(strArray[3], SPLITER1);
+	}
+	else
+	{
+		printf("Invalid index. Pos 2.");
+		return;
+	}
 }

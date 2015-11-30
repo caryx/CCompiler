@@ -119,3 +119,13 @@ void GotoAction::dump()
         }
     }
 }
+
+void GotoAction::store()
+{
+
+}
+
+void GotoAction::load()
+{
+
+}

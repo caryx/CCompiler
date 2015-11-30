@@ -28,6 +28,9 @@ public:
     int getProductionIndex(CProduction prod);
 
     void dump();
+
+	void store();
+	void load();
 private:
     vector<string> getFirstSet(vector<string> token, int startIndex);
     bool isTerminal(string token);

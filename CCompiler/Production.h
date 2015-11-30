@@ -33,6 +33,9 @@ public:
 
     string getTokenAfterNext();
 
+	string store();
+	void load(string& str);
+
 public:
     int index;
     string name;

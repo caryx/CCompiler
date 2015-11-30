@@ -24,6 +24,9 @@ public:
 
     void dump();
 
+	void store();
+	void load();
+
     static const int INVALID_ACTION = 2<<31;
 private:
     map<CProduction,int> prodStateMap;  // a map from a product to the state containing it.

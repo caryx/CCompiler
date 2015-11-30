@@ -1,6 +1,12 @@
 
 #ifndef _Basic_Type
 #define _Basic_Type
+//#include <iostream>
+//#include <vector>
+#include <string>
+//using namespace std;
+const char SPLITER1 = '\1';
+const char SPLITER2 = '\2';
 
 enum VariableType
 {
@@ -59,5 +65,6 @@ enum TokenType
 //	"Mark",
 //	"Number",
 //};
+
 
 #endif
