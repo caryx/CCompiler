@@ -32,7 +32,6 @@ private:
     //map<CProduction,int> prodStateMap;  // a map from a product to the state containing it.
     vector<map<string, int>> gotoTable;
 
-
 	const char* filePath = "./!actionTable.txt";
 };
 

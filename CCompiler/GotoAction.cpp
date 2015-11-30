@@ -159,15 +159,12 @@ bool GotoAction::load()
 	for (int i = 0; i < tableItemVec.size(); ++i)
 	{
 		vector<string> mapItemVec = split(tableItemVec[i], SPLITER1);
-		for (int k = 0; k < tableItemVec.size(); ++k)
+		for (int k = 0; k < mapItemVec.size()/2; ++k)
 		{
-			if (mapItemVec.size() == 2)
-			{
-				string str = mapItemVec[0];
-				string str1 = mapItemVec[1];
-				int action = str2int(str1);
-				gotoTable[i][str] = action;
-			}
+			string str = mapItemVec[k*2];
+			string str1 = mapItemVec[k*2+1];
+			int action = str2int(str1);
+			gotoTable[i][str] = action;
 		}
 	}
 

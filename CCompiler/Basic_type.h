@@ -6,7 +6,7 @@
 #include <string>
 //using namespace std;
 const char SPLITER1 = '\1';
-const char SPLITER2 = '\2';
+const char SPLITER2 = '\n';
 const char SPLITER3 = '\3';
 
 enum VariableType
